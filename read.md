@@ -68,3 +68,65 @@ Here's another one:
     }
 
 ```
+
+This component holds a list of contacts and when it initializes, it preforms a http request. Once the request comes back, the list get updated. 
+Again, at the point, our application state has changed so we will want to update the view.
+
+Basically application state change can be caused by three things:
+
+* **Events** - click, submit, ...
+* **XHR** - Fetching data from a remote server
+* **Timers** - setTimeout, setInterval()
+
+They are all asynchronous, which brings us to the conclusion that, basically whenever some asynchronous operation has been performed, our application 
+state might have changed. This is when someone needs to tell angular to update the view.
+
+## Who notifies Angular ?
+
+Alright, we know what causes application state change. But what is it that tells Angular, that as this particular moment, the view has to be updated ?
+
+Angular allows us to use native APIs directly. There are no intereceptor methods we have to call so Angular gets notified to update the DOM. is that 
+pure magic?
+
+Zones take care of this. In fact, Angular comes with its own zone called **NgZone**.
+
+The short version is, that somewhere in Angular's source code, there's this thing called **ApplicationRef**, which listens to **NgZones** **onTurnDone** 
+event. Whenever this event is fired, it executes a **tick()** function which essentially performs change detection
+
+```javascript
+    // very simplified version of actual source
+    class ApplicationRef {
+
+        changeDetectorRefs:ChangeDetectorRef[] = [];
+
+        constructor(private zone: NgZone) {
+            this.zone.onTurnDone
+            .subscribe(() => this.zone.run(() => this.tick());
+        }
+
+        tick() {
+            this.changeDetectorRefs
+            .forEach((ref) => ref.detectChanges());
+        }
+    }
+```
+
+## Change Detection
+
+Okay cool, we now know when change detection is triggered, but how is it performed? Well, the first thing we need to notice is that, 
+in Angular, **each component has its own change detector.**
+
+This is a signifact fact, since this allows us to control, for each component individually, how and when change detection is performed! More on that later.
+
+Let's assume that somewhere in out component tree an event is fired, maybe a button has been clicked. What happens next? We just learned that zones execute 
+the given handler and notify Angular when the turn is done, which eventually causes Angular to perform change detection.
+
+Since, each component has it's own change detector, and an Angular application consists of a component tree, the logical result is that we're having a **change detector** too. this tree can also be viewed as a directed graph where data always flows from top to bottom.
+
+The reason why data flows from top to bottom, is because change detection is also always performed from top to bottom for every single component, every single time, 
+starting from the root component. This is awesome, as unidirectional data flow is more predictable than cycles. We always know where the data in our views comes from, 
+because it can only result from its component.
+
+Another interesting observation is that change detection gets stable after single pass. Meaning that, if one of our components causes any additional side effects after the 
+first run during change detection, Angular will throw an error.
+
