@@ -27,7 +27,7 @@ So basically the goal of change detection is always projecting data and it's cha
 Now that we know what change detection is all about, we might wonder, when excatly can such a channge happen? When does Angular know that it has to update the View? 
 Well, let's take a look at the following code
 
-```Angular
+```javascript
     @Component({
         template: `
             <h1>{{firstname}} {{lastname}}</h1>
