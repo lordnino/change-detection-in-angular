@@ -45,3 +45,26 @@ Well, let's take a look at the following code
         }
     }
 ```
+
+The component above simply displays two properties and provides a method to change them and when the button in the template is clicked.  
+The moment this particular button is clicked is the moment when applicatin state has changed, because it changes the properties of the component.  
+That's the moment we want to update the view.
+
+Here's another one:
+
+```javascript
+    @Component()
+    class ContactsApp implements OnInit{
+
+        contacts:Contact[] = [];
+
+        constructor(private http: Http) {}
+
+        ngOnInit() {
+            this.http.get('/contacts')
+            .map(res => res.json())
+            .subscribe(contacts => this.contacts = contacts);
+        }
+    }
+
+```
