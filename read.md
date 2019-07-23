@@ -258,5 +258,35 @@ class CartBadgeCmp {
     })
   }
 }
+```
 
+Let's say we build an e-commerece application with a shopping cart. Whenever a user puts a product into the shopiing cart, we want a little counter to show up in our UI, so the user can see the amount of products in the cart.
+
+**CartBadgeCmp** does exactly that. It has a **counter** and an input property **addItemStream**, which is a stream of events that gets fired, whenever a product is added to the shopping cart.
+
+In addition, we set the change detection strategy to **OnPush**, so change detection isn't performed all the time, only when the componet's input properties change.
+
+However, as mentioned earlier, the reference of **addItemStream** will never change, so change detection is never performed for this component's subtree, This is a problem because the component subscribes to this stream in its **ngOnInit** life cycle hook and increments the counter. This is applicatino state change we want to have this reflected in our view right?.
+
+How can we inform Angular about this chane? How can we tell Angular that change detection needs to be performed for this component, even though the entire tree is set to **OnPush**?
+
+No worries, Angular has us covered. As we've learned earlier, change detection is **always** performed from top to btoom. So what we need is a way to detect changes for the entire path of the tree component where the change happened. Angular can't know which path it is, but we do.
+
+We can access a component's **ChangeDetectorRef** via **dependcy Injection**, which comes with an API called **markForCheck()**. This method does excatly what we need! It marks the path from our component untill root to be checked for the next change detection run.
+
+Let's inject it into our component:
+
+```javascript
+    constructor(private cd: ChangeDetectorRef)
+```
+
+Then, tell Angular to mark the path from this component until root to be checked:
+
+```javascript
+    this.addItemStream.subscribe(() => {
+      this.counter++; // application state changed
+      this.cd.markForCheck(); // marks path
+    })
+  }
+}
 ```
